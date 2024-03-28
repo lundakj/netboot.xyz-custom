@@ -1,0 +1,9 @@
+#!ipxe
+###
+### UBCD menu
+###
+
+:ubcd
+kernel https://boot.netboot.xyz/memdisk raw iso
+initrd http://ipxe.alsoft.cz/ubcd/ubcd538.iso
+boot || exit 0
