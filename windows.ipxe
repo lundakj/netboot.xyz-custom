@@ -1,0 +1,78 @@
+#!ipxe
+
+# Microsoft Windows
+# https://www.microsoft.com
+
+set winpe_arch x64
+set win_image Win_Server_STD_CORE_2022_2108.30_64Bit_English_DC_STD_MLF_X23-69310
+set win_base_url http://veeam0.alsoft.cz/win
+goto ${menu} ||
+
+:windows
+set os Microsoft Windows
+clear win_version
+menu ${os} 
+item --gap Installers
+item win_install ${space} Load ${os} Installer...
+item --gap Options:
+item image_set ${space} Image [ ${win_image} ]
+item pe_arch_set ${space} Architecture [ ${winpe_arch} ]
+item url_set ${space} Base URL [ ${win_base_url} ]
+choose win_version || goto windows_exit
+goto ${win_version}
+
+:image_set
+menu Image
+item Win_Server_STD_CORE_2022_2108.30_64Bit_English_DC_STD_MLF_X23-69310
+item WIN_ENT_LTSC_2021_64BIT_Czech_MLF_X22-84408
+item WIN_ENT_LTSC_2021_64BIT_English_MLF_X22-84414
+item Win_Pro_10_22H2.16_64BIT_Czech_Pro_Ent_EDU_N_MLF_X23-68724
+item Win_Pro_10_22H2.16_64BIT_English_Pro_Ent_EDU_N_MLF_X23-68728
+item Win_Pro_11_23H2.3_64BIT_Czech_Pro_Ent_EDU_N_MLF_X23-69667
+item Win_Pro_11_23H2.3_64BIT_English_Pro_Ent_EDU_N_MLF_X23-69671
+
+choose win_image && goto windows
+
+:pe_arch_set
+iseq ${winpe_arch} x64 && set winpe_arch x86 || set winpe_arch x64
+goto windows
+
+:url_set
+echo Set the HTTP URL of an extracted Windows ISO without the trailing slash:
+echo e.g. http://www.mydomain.com/windows
+echo
+echo -n URL: ${} && read win_base_url
+echo
+echo netboot.xyz will attempt to load the following files:
+echo ${win_base_url}/${winpe_arch}/bootmgr
+echo ${win_base_url}/${winpe_arch}/bootmgr.efi
+echo ${win_base_url}/${winpe_arch}/boot/bcd
+echo ${win_base_url}/${winpe_arch}/boot/boot.sdi
+echo ${win_base_url}/${winpe_arch}/sources/boot.wim
+#echo ${win_base_url}/configs/${win_image}/install.bat
+#echo ${win_base_url}/configs/configure.bat
+#echo ${win_base_url}/configs/winpeshl.ini
+echo
+prompt Press any key to return to Windows Menu...
+goto windows
+
+:win_install
+isset ${win_base_url} && goto boot || echo URL not set... && goto url_set
+
+:boot
+imgfree
+kernel http://${boot_domain}/wimboot
+#initrd ${win_base_url}/configs/${win_image}/install.bat install.bat
+#initrd ${win_base_url}/configs/configure.bat configure.bat
+#initrd ${win_base_url}/configs/winpeshl.ini winpeshl.ini
+initrd -n bootmgr     ${win_base_url}/${winpe_arch}/bootmgr       bootmgr ||
+initrd -n bootmgr.efi ${win_base_url}/${winpe_arch}/bootmgr.efi   bootmgr.efi ||      
+initrd -n bcd         ${win_base_url}/${winpe_arch}/boot/bcd      bcd ||
+initrd -n bcd         ${win_base_url}/${winpe_arch}/Boot/BCD      bcd ||
+initrd -n boot.sdi    ${win_base_url}/${winpe_arch}/boot/boot.sdi boot.sdi ||
+initrd -n boot.sdi    ${win_base_url}/${winpe_arch}/Boot/boot.sdi boot.sdi ||
+initrd -n boot.wim    ${win_base_url}/${winpe_arch}/sources/boot.wim boot.wim
+boot
+
+:windows_exit
+exit 0
