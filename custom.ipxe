@@ -9,7 +9,7 @@ goto ${menu} ||
 menu Lundak
 item --gap OS:
 item windows ${space} Windows
-#item ubcd ${space} Ultimate-Boot-CD
+item ubcd ${space} Ultimate-Boot-CD
 choose menu || goto custom_exit
 echo ${cls}
 goto ${menu} ||
